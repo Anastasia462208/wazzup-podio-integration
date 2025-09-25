@@ -1,0 +1,166 @@
+{
+  "app_name": "Wazzup Messages",
+  "app_description": "Приложение для хранения сообщений из Wazzup",
+  "fields": [
+    {
+      "external_id": "contact-name",
+      "type": "text",
+      "config": {
+        "label": "Имя контакта",
+        "description": "Имя отправителя сообщения",
+        "required": true,
+        "unique": false
+      }
+    },
+    {
+      "external_id": "contact-phone",
+      "type": "text",
+      "config": {
+        "label": "Телефон",
+        "description": "Номер телефона контакта",
+        "required": false,
+        "unique": false
+      }
+    },
+    {
+      "external_id": "message-text",
+      "type": "text",
+      "config": {
+        "label": "Текст сообщения",
+        "description": "Содержимое сообщения",
+        "required": false,
+        "unique": false,
+        "size": "large"
+      }
+    },
+    {
+      "external_id": "message-type",
+      "type": "category",
+      "config": {
+        "label": "Тип сообщения",
+        "description": "Тип сообщения (текст, изображение, видео и т.д.)",
+        "required": true,
+        "unique": false,
+        "multiple": false,
+        "options": [
+          {"text": "Текст", "color": "3498db"},
+          {"text": "Изображение", "color": "e74c3c"},
+          {"text": "Видео", "color": "9b59b6"},
+          {"text": "Аудио", "color": "f39c12"},
+          {"text": "Документ", "color": "2ecc71"},
+          {"text": "Стикер", "color": "e67e22"},
+          {"text": "Контакт", "color": "34495e"},
+          {"text": "Местоположение", "color": "1abc9c"}
+        ]
+      }
+    },
+    {
+      "external_id": "direction",
+      "type": "category",
+      "config": {
+        "label": "Направление",
+        "description": "Направление сообщения",
+        "required": true,
+        "unique": false,
+        "multiple": false,
+        "options": [
+          {"text": "Входящее", "color": "27ae60"},
+          {"text": "Исходящее", "color": "3498db"}
+        ]
+      }
+    },
+    {
+      "external_id": "message-date",
+      "type": "date",
+      "config": {
+        "label": "Дата сообщения",
+        "description": "Время получения/отправки сообщения",
+        "required": true,
+        "unique": false,
+        "time": "enabled"
+      }
+    },
+    {
+      "external_id": "chat-id",
+      "type": "text",
+      "config": {
+        "label": "ID чата",
+        "description": "Уникальный идентификатор чата в Wazzup",
+        "required": true,
+        "unique": false
+      }
+    },
+    {
+      "external_id": "source",
+      "type": "category",
+      "config": {
+        "label": "Источник",
+        "description": "Источник сообщения",
+        "required": true,
+        "unique": false,
+        "multiple": false,
+        "options": [
+          {"text": "Wazzup", "color": "25d366"},
+          {"text": "WhatsApp", "color": "25d366"},
+          {"text": "Telegram", "color": "0088cc"},
+          {"text": "Instagram", "color": "e4405f"},
+          {"text": "VK", "color": "4c75a3"}
+        ]
+      }
+    },
+    {
+      "external_id": "status",
+      "type": "category",
+      "config": {
+        "label": "Статус",
+        "description": "Статус обработки сообщения",
+        "required": false,
+        "unique": false,
+        "multiple": false,
+        "options": [
+          {"text": "Новое", "color": "f39c12"},
+          {"text": "Прочитано", "color": "3498db"},
+          {"text": "В работе", "color": "e67e22"},
+          {"text": "Закрыто", "color": "27ae60"}
+        ]
+      }
+    },
+    {
+      "external_id": "media-url",
+      "type": "link",
+      "config": {
+        "label": "Ссылка на медиа",
+        "description": "URL медиа-файла (изображение, видео, аудио)",
+        "required": false,
+        "unique": false
+      }
+    }
+  ],
+  "views": [
+    {
+      "name": "Все сообщения",
+      "type": "standard",
+      "fields": ["contact-name", "contact-phone", "message-text", "message-type", "direction", "message-date", "source"],
+      "sort_by": "message-date",
+      "sort_desc": true
+    },
+    {
+      "name": "Входящие сообщения",
+      "type": "standard",
+      "fields": ["contact-name", "contact-phone", "message-text", "message-type", "message-date", "source"],
+      "filters": {
+        "direction": "Входящее"
+      },
+      "sort_by": "message-date",
+      "sort_desc": true
+    },
+    {
+      "name": "По контактам",
+      "type": "standard",
+      "fields": ["contact-name", "contact-phone", "message-text", "message-date"],
+      "group_by": "contact-name",
+      "sort_by": "message-date",
+      "sort_desc": true
+    }
+  ]
+}

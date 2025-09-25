@@ -1,0 +1,1 @@
+# Wazzup integration module
