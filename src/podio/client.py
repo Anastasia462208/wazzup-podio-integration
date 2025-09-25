@@ -42,7 +42,9 @@ class PodioClient:
             data = {
                 'grant_type': 'app',
                 'app_id': self.app_id,
-                'app_token': self.app_token
+                'app_token': self.app_token,
+                'client_id': self.client_id,
+                'client_secret': self.client_secret
             }
             
             response = requests.post(url, data=data)
