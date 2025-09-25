@@ -165,69 +165,75 @@ class PodioClient:
             logger.error(f"Ошибка создания элемента в Podio: {str(e)}")
             return None
     
-    def _prepare_item_fields(self, message_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Подготовка полей для создания элемента в Podio"""
+    def _prepare_item_fields(self, message_data: Dict[str, Any]) -> List[Dict]:
+        """Подготовка полей для создания элемента в приложении Wazz"""
         try:
-            # Базовые поля (адаптируйте под вашу структуру приложения в Podio)
-            fields = {}
+            # Загружаем конфигурацию полей
+            import json
+            import os
             
-            # Поле "Контакт" (текстовое поле)
-            if 'contact_name' in message_data:
-                fields['contact-name'] = {
-                    'value': message_data['contact_name']
-                }
+            config_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 
+                                     'config', 'wazz_app_mapping.json')
             
-            # Поле "Телефон" (текстовое поле)
-            if 'contact_phone' in message_data:
-                fields['contact-phone'] = {
-                    'value': message_data['contact_phone']
-                }
+            with open(config_path, 'r', encoding='utf-8') as f:
+                config = json.load(f)
             
-            # Поле "Сообщение" (текстовое поле)
-            if 'message_text' in message_data:
-                fields['message-text'] = {
-                    'value': message_data['message_text']
-                }
+            fields_config = config['fields']
+            mapping = config['mapping']['field_values']
             
-            # Поле "Тип сообщения" (категория)
-            if 'message_type' in message_data:
-                fields['message-type'] = {
-                    'value': message_data['message_type']
-                }
+            # Подготавливаем поля для Podio API
+            fields = []
             
-            # Поле "Направление" (категория)
-            if 'direction' in message_data:
-                fields['direction'] = {
-                    'value': message_data['direction']
-                }
+            # ID сообщения
+            if message_data.get('message_id'):
+                fields.append({
+                    'field_id': fields_config['id']['field_id'],
+                    'values': [{'value': str(message_data['message_id'])}]
+                })
             
-            # Поле "Дата сообщения" (дата)
-            if 'timestamp' in message_data:
-                try:
-                    # Конвертируем timestamp в формат Podio
-                    dt = datetime.fromisoformat(message_data['timestamp'].replace('Z', '+00:00'))
-                    fields['message-date'] = {
-                        'start': dt.strftime('%Y-%m-%d %H:%M:%S')
-                    }
-                except:
-                    pass
+            # Текст сообщения
+            if message_data.get('message_text'):
+                fields.append({
+                    'field_id': fields_config['message_text']['field_id'],
+                    'values': [{'value': message_data['message_text']}]
+                })
             
-            # Поле "Chat ID" (текстовое поле)
-            if 'chat_id' in message_data:
-                fields['chat-id'] = {
-                    'value': message_data['chat_id']
-                }
+            # Отправитель
+            if message_data.get('contact_name'):
+                fields.append({
+                    'field_id': fields_config['sender']['field_id'],
+                    'values': [{'value': message_data['contact_name']}]
+                })
             
-            # Поле "Источник" (категория)
-            fields['source'] = {
-                'value': message_data.get('source', 'wazzup')
-            }
+            # Телефон
+            if message_data.get('contact_phone'):
+                fields.append({
+                    'field_id': fields_config['phone']['field_id'],
+                    'values': [{'type': 'work', 'value': message_data['contact_phone']}]
+                })
+            
+            # Канал (маппинг из Wazzup в Podio)
+            channel_type = message_data.get('channel_type', 'whatsapp')
+            channel_value = mapping['channel_mapping'].get(channel_type, 'Вотс ап')
+            fields.append({
+                'field_id': fields_config['channel']['field_id'],
+                'values': [channel_value]
+            })
+            
+            # Статус (по умолчанию "Новое")
+            status_type = message_data.get('status', 'new')
+            status_value = mapping['status_mapping'].get(status_type, 'Новое')
+            fields.append({
+                'field_id': fields_config['status']['field_id'],
+                'values': [status_value]
+            })
             
             return fields
         
         except Exception as e:
             logger.error(f"Ошибка подготовки полей: {str(e)}")
-            return {}
+            return []
+
     
     def _add_comment_to_item(self, item_id: int, message_data: Dict[str, Any]) -> bool:
         """Добавление комментария к элементу с форматированным сообщением"""

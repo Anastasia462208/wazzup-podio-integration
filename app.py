@@ -129,6 +129,144 @@ def status():
         logger.error(f"Ошибка проверки статуса: {str(e)}")
         return jsonify({'error': str(e)}), 500
 
+@app.route('/send_message', methods=['POST'])
+def send_message():
+    """
+    Эндпоинт для отправки сообщений через Wazzup API
+    Может использоваться из Podio или других систем
+    """
+    try:
+        data = request.get_json()
+        
+        if not data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Нет данных для отправки'
+            }), 400
+        
+        chat_id = data.get('chat_id')
+        text = data.get('text')
+        
+        if not chat_id or not text:
+            return jsonify({
+                'status': 'error',
+                'message': 'Требуются поля chat_id и text'
+            }), 400
+        
+        # Импортируем и используем отправщик
+        from src.wazzup.sender import WazzupSender
+        
+        sender = WazzupSender()
+        result = sender.send_message(chat_id, text)
+        
+        if result:
+            logger.info(f"Сообщение отправлено через API: {result.get('messageId')}")
+            return jsonify({
+                'status': 'success',
+                'message': 'Сообщение отправлено',
+                'wazzup_response': result,
+                'timestamp': datetime.now().isoformat()
+            })
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Ошибка отправки сообщения через Wazzup'
+            }), 500
+            
+    except Exception as e:
+        logger.error(f"Ошибка в эндпоинте send_message: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': f'Внутренняя ошибка: {str(e)}'
+        }), 500
+
+@app.route('/webhook/podio', methods=['POST'])
+def podio_webhook():
+    """
+    Вебхук для получения уведомлений от Podio
+    Используется для отправки ответов из Podio в WhatsApp
+    """
+    try:
+        data = request.get_json()
+        logger.info(f"Получен вебхук от Podio: {data}")
+        
+        # Обрабатываем различные типы событий Podio
+        event_type = data.get('type')
+        
+        if event_type == 'comment.create':
+            # Новый комментарий - отправляем как сообщение в WhatsApp
+            return handle_podio_comment(data)
+        elif event_type == 'item.update':
+            # Обновление элемента - можем обработать изменение статуса
+            return handle_podio_item_update(data)
+        else:
+            logger.info(f"Неизвестный тип события Podio: {event_type}")
+            return jsonify({'status': 'ignored', 'reason': 'unknown_event_type'})
+            
+    except Exception as e:
+        logger.error(f"Ошибка обработки вебхука Podio: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+def handle_podio_comment(data):
+    """Обработка нового комментария из Podio"""
+    try:
+        from src.wazzup.sender import WazzupSender
+        
+        comment_data = data.get('data', {})
+        comment_text = comment_data.get('value', '')
+        
+        # Извлекаем chat_id из связанного элемента или комментария
+        chat_id = extract_chat_id_from_podio_data(data)
+        
+        if chat_id and comment_text:
+            sender = WazzupSender()
+            result = sender.send_message(chat_id, comment_text)
+            
+            if result:
+                logger.info(f"Комментарий из Podio отправлен в WhatsApp: {result.get('messageId')}")
+                return jsonify({
+                    'status': 'success',
+                    'message': 'Комментарий отправлен в WhatsApp',
+                    'wazzup_message_id': result.get('messageId')
+                })
+            else:
+                return jsonify({
+                    'status': 'error',
+                    'message': 'Ошибка отправки в WhatsApp'
+                }), 500
+        else:
+            return jsonify({
+                'status': 'ignored',
+                'reason': 'no_chat_id_or_text'
+            })
+            
+    except Exception as e:
+        logger.error(f"Ошибка обработки комментария Podio: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+def handle_podio_item_update(data):
+    """Обработка обновления элемента в Podio"""
+    try:
+        logger.info("Обновление элемента Podio получено")
+        return jsonify({'status': 'processed'})
+        
+    except Exception as e:
+        logger.error(f"Ошибка обработки обновления Podio: {e}")
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+def extract_chat_id_from_podio_data(podio_data):
+    """
+    Извлечение chat_id из данных Podio
+    Нужно адаптировать под структуру ваших данных
+    """
+    try:
+        # Для тестирования возвращаем ваш номер
+        return "79002121614"
+        
+    except Exception as e:
+        logger.error(f"Ошибка извлечения chat_id из Podio: {e}")
+        return None
+
 @app.errorhandler(404)
 def not_found(error):
     """Обработчик 404 ошибок"""

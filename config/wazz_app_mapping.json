@@ -1,0 +1,67 @@
+{
+  "app_id": 30487652,
+  "app_name": "Wazz",
+  "space_id": 10466627,
+  "fields": {
+    "id": {
+      "field_id": 274099966,
+      "type": "text",
+      "label": "ID"
+    },
+    "status": {
+      "field_id": 274099967,
+      "type": "category",
+      "label": "Статус",
+      "options": ["В работе", "Новое", "Отвечено"]
+    },
+    "message_text": {
+      "field_id": 274099896,
+      "type": "text",
+      "label": "Текст сообщения"
+    },
+    "sender": {
+      "field_id": 274099962,
+      "type": "text",
+      "label": "Отправитель"
+    },
+    "channel": {
+      "field_id": 274099965,
+      "type": "category",
+      "label": "Канал",
+      "options": ["Вотс ап", "Телеграмм", "Авито", "Вконтакте"]
+    },
+    "client": {
+      "field_id": 274099963,
+      "type": "contact",
+      "label": "Клиент"
+    },
+    "phone": {
+      "field_id": 274099964,
+      "type": "phone",
+      "label": "Phone"
+    }
+  },
+  "mapping": {
+    "wazzup_to_podio": {
+      "message_id": "id",
+      "message_text": "message_text",
+      "contact_name": "sender",
+      "contact_phone": "phone",
+      "channel_type": "channel",
+      "status": "status"
+    },
+    "field_values": {
+      "channel_mapping": {
+        "whatsapp": "Вотс ап",
+        "telegram": "Телеграмм",
+        "instagram": "Авито",
+        "vk": "Вконтакте"
+      },
+      "status_mapping": {
+        "new": "Новое",
+        "in_progress": "В работе",
+        "answered": "Отвечено"
+      }
+    }
+  }
+}
